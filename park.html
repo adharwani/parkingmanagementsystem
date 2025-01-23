@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .parking-slot {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            border: 2px solid #333;
+            border-radius: 5px;
+            line-height: 80px;
+            font-weight: bold;
+            color: white;
+        }
+        .empty {
+            background-color: #4CAF50;
+        }
+        .occupied {
+            background-color: #FF5733;
+        }
+        .qr-code {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Parking Management System</h1>
+        <h2>Two-Wheeler Parking</h2>
+        <div id="two-wheeler-parking"></div>
+        <h2>Four-Wheeler Parking</h2>
+        <div id="four-wheeler-parking"></div>
+        <br>
+        <input type="text" id="vehicle" placeholder="Enter Vehicle No (e.g. MH12AZ2323)">
+        <select id="vehicle-type">
+            <option value="two">Two-Wheeler</option>
+            <option value="four">Four-Wheeler</option>
+        </select>
+        <button onclick="parkVehicle()">Park</button>
+        <button onclick="removeVehicle()">Remove</button>
+        <h3>Total Amount Collected: <span id="total-amount">0</span> Rs</h3>
+        <div id="qr-section" class="qr-code">
+            <h3>Scan to Pay</h3>
+            <img src="/home/kali/Downloads/6afbfad7-8f73-4043-a297-d4c1eef37e96.jpeg" alt="QR Code" width="200">
+        </div>
+    </div>
+
+    <script>
+        const totalTwoWheelerSlots = 4;
+        const totalFourWheelerSlots = 4;
+        let twoWheelerSlots = Array(totalTwoWheelerSlots).fill(null);
+        let fourWheelerSlots = Array(totalFourWheelerSlots).fill(null);
+        let totalAmount = 0;
+
+        function renderSlots() {
+            renderParking('two-wheeler-parking', twoWheelerSlots);
+            renderParking('four-wheeler-parking', fourWheelerSlots);
+            document.getElementById('total-amount').innerText = totalAmount;
+        }
+
+        function renderParking(areaId, slots) {
+            const parkingArea = document.getElementById(areaId);
+            parkingArea.innerHTML = '';
+            slots.forEach(vehicle => {
+                const slotDiv = document.createElement('div');
+                slotDiv.classList.add('parking-slot');
+                slotDiv.classList.add(vehicle ? 'occupied' : 'empty');
+                slotDiv.innerText = vehicle ? vehicle : 'Empty';
+                parkingArea.appendChild(slotDiv);
+            });
+        }
+
+        function isValidVehicleNumber(vehicle) {
+            const regex = /^[A-Z]{2}\d{2}[A-Z]{2}\d{4}$/;
+            return regex.test(vehicle);
+        }
+
+        function parkVehicle() {
+            const vehicle = document.getElementById('vehicle').value.trim().toUpperCase();
+            const type = document.getElementById('vehicle-type').value;
+            if (vehicle === '') {
+                alert('Please enter a vehicle number.');
+                return;
+            }
+            if (!isValidVehicleNumber(vehicle)) {
+                alert('Invalid vehicle number. Format: MH12AZ2323');
+                return;
+            }
+
+            if (twoWheelerSlots.includes(vehicle) || fourWheelerSlots.includes(vehicle)) {
+                alert('This vehicle is already parked.');
+                return;
+            }
+
+            let slots = type === 'two' ? twoWheelerSlots : fourWheelerSlots;
+            let cost = type === 'two' ? 20 : 50;
+
+            const emptyIndex = slots.indexOf(null);
+            if (emptyIndex !== -1) {
+                slots[emptyIndex] = vehicle;
+                totalAmount += cost;
+                document.getElementById('qr-section').style.display = 'block';
+            } else {
+                alert('No empty slots available for ' + (type === 'two' ? 'Two-Wheeler' : 'Four-Wheeler'));
+            }
+            renderSlots();
+        }
+
+        function removeVehicle() {
+            const vehicle = document.getElementById('vehicle').value.trim().toUpperCase();
+            if (twoWheelerSlots.includes(vehicle)) {
+                twoWheelerSlots[twoWheelerSlots.indexOf(vehicle)] = null;
+            } else if (fourWheelerSlots.includes(vehicle)) {
+                fourWheelerSlots[fourWheelerSlots.indexOf(vehicle)] = null;
+            } else {
+                alert('Vehicle not found in parking.');
+            }
+            document.getElementById('qr-section').style.display = 'none';
+            renderSlots();
+        }
+
+        renderSlots();
+    </script>
+</body>
+</html>
